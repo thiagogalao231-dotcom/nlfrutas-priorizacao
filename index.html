@@ -1,17 +1,124 @@
-<h2>NL FRUTAS – PRIORIZAÇÃO</h2>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NL Frutas – Priorização</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding-bottom: 80px;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  background: #1b5e20;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.container {
+  padding: 12px;
+}
+
+input, button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+input {
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #2e7d32;
+  color: white;
+  font-weight: bold;
+}
+
+button.ok {
+  background: #1565c0;
+}
+
+button.limpar {
+  background: #c62828;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card.ok {
+  opacity: 0.5;
+}
+
+.produto {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.qtd {
+  font-size: 20px;
+  color: #c62828;
+  font-weight: bold;
+}
+
+.status {
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  background: white;
+  width: 100%;
+  border-top: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<header>NL FRUTAS – PRIORIZAÇÃO</header>
+
+<div class="container">
 
 <input id="nome" placeholder="Seu nome">
 <input id="codcli" placeholder="Código da Loja">
 
 <button onclick="carregar()">Carregar Loja</button>
-<button onclick="limpar()">Limpar Dia</button>
+<button class="limpar" onclick="limpar()">Limpar Dia</button>
 
 <input id="busca" placeholder="Buscar produto" onkeyup="listar()">
-<label><input type="checkbox" id="pendente" onchange="listar()"> Só pendentes</label>
+<label><input type="checkbox" id="pendente" onchange="listar()"> Mostrar só pendentes</label>
 
-<h3>Total a pegar: <span id="total">0</span></h3>
+</div>
 
-<table id="tabela"></table>
+<div class="container" id="lista"></div>
+
+<footer>
+Total a pegar: <span id="total">0</span>
+</footer>
 
 <script>
 function carregar() {
@@ -31,25 +138,22 @@ function listar() {
       if (soPendente && dados[i][5] === "OK") continue;
       if (busca && !dados[i][3].toLowerCase().includes(busca)) continue;
 
-      total += dados[i][5] !== "OK" ? Number(dados[i][4]) : 0;
+      if (dados[i][5] !== "OK") total += Number(dados[i][4]);
 
       html += `
-        <tr>
-          <td>${dados[i][1]}</td>
-          <td>${dados[i][3]}</td>
-          <td>${dados[i][4]}</td>
-          <td>${dados[i][5]}</td>
-          <td>${dados[i][6] || ""}</td>
-          <td>
-            ${dados[i][5] !== "OK"
-              ? `<button onclick="ok(${i+1})">OK</button>`
-              : "✔"}
-          </td>
-        </tr>`;
+        <div class="card ${dados[i][5] === "OK" ? "ok" : ""}">
+          <div class="produto">${dados[i][3]}</div>
+          <div class="qtd">${dados[i][4]}</div>
+          <div class="status">Status: ${dados[i][5]} ${dados[i][6] ? " – " + dados[i][6] : ""}</div>
+          ${dados[i][5] !== "OK"
+            ? `<button class="ok" onclick="ok(${i+1})">OK</button>`
+            : ""}
+        </div>
+      `;
     }
 
+    document.getElementById("lista").innerHTML = html;
     document.getElementById("total").innerText = total;
-    document.getElementById("tabela").innerHTML = html;
   }).listarControle();
 }
 
@@ -57,11 +161,11 @@ function ok(linha) {
   const nome = document.getElementById("nome").value;
   if (!nome) return alert("Informe seu nome");
   google.script.run.marcarOK(linha, nome);
-  setTimeout(listar, 500);
+  setTimeout(listar, 400);
 }
 
 function limpar() {
-  if (confirm("Limpar o dia inteiro?")) {
+  if (confirm("Deseja limpar o dia inteiro?")) {
     google.script.run.limparDia();
     setTimeout(listar, 500);
   }
@@ -69,4 +173,7 @@ function limpar() {
 
 listar();
 </script>
+
+</body>
+</html>
 
