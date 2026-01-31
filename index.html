@@ -1,155 +1,72 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>NL Frutas – Priorização</title>
+<h2>NL FRUTAS – PRIORIZAÇÃO</h2>
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f2f2f2;
-  padding: 10px;
-}
-h1 {
-  text-align: center;
-}
-.box {
-  background: #fff;
-  padding: 12px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-}
-input, button, select {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  font-size: 16px;
-}
-button {
-  background: #2e7d32;
-  color: white;
-  border: none;
-  border-radius: 6px;
-}
-.ok {
-  background: #1976d2;
-}
-.status-ok {
-  color: green;
-  font-weight: bold;
-}
-.status-pendente {
-  color: orange;
-  font-weight: bold;
-}
-.item {
-  border-bottom: 1px solid #ddd;
-  padding: 6px 0;
-}
-</style>
-</head>
+<input id="nome" placeholder="Seu nome">
+<input id="codcli" placeholder="Código da Loja">
 
-<body>
+<button onclick="carregar()">Carregar Loja</button>
+<button onclick="limpar()">Limpar Dia</button>
 
-<h1>📦 NL Frutas – Priorização</h1>
+<input id="busca" placeholder="Buscar produto" onkeyup="listar()">
+<label><input type="checkbox" id="pendente" onchange="listar()"> Só pendentes</label>
 
-<div class="box">
-  <label>Usuário</label>
-  <select id="usuario">
-    <option value="Amanda">Amanda</option>
-    <option value="João">João</option>
-  </select>
+<h3>Total a pegar: <span id="total">0</span></h3>
 
-  <label>Código do Produto</label>
-  <input id="codProd">
-
-  <label>Nome do Produto</label>
-  <input id="nomeProd">
-
-  <label>Código da Loja</label>
-  <input id="codCli">
-
-  <label>Nome da Loja</label>
-  <input id="nomeCli">
-
-  <label>Quantidade</label>
-  <input type="number" id="qtd">
-
-  <button onclick="adicionar()">Adicionar</button>
-</div>
-
-<div class="box">
-  <h3>📋 Pendências</h3>
-  <div id="lista"></div>
-</div>
+<table id="tabela"></table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbz_xttgSN1o_xOCNm6ISuqiZCHrh0wNRD6dsoEl4NS7FjaOL_wCgpTRXSb5qeO_Ix8VXA/exec";
+function carregar() {
+  const cod = document.getElementById("codcli").value;
+  google.script.run.carregarPorCliente(cod);
+  setTimeout(listar, 800);
+}
 
-function adicionar() {
-  const dados = {
-    usuario: usuario.value,
-    codProd: codProd.value,
-    nomeProd: nomeProd.value,
-    codCli: codCli.value,
-    nomeCli: nomeCli.value,
-    qtd: qtd.value
-  };
+function listar() {
+  google.script.run.withSuccessHandler(dados => {
+    let html = "";
+    let total = 0;
+    const busca = document.getElementById("busca").value.toLowerCase();
+    const soPendente = document.getElementById("pendente").checked;
 
-  fetch(API_URL + "?action=adicionar", {
-    method: "POST",
-    body: JSON.stringify(dados)
-  }).then(() => {
-    limpar();
-    carregar();
-  });
+    for (let i = 1; i < dados.length; i++) {
+      if (soPendente && dados[i][5] === "OK") continue;
+      if (busca && !dados[i][3].toLowerCase().includes(busca)) continue;
+
+      total += dados[i][5] !== "OK" ? Number(dados[i][4]) : 0;
+
+      html += `
+        <tr>
+          <td>${dados[i][1]}</td>
+          <td>${dados[i][3]}</td>
+          <td>${dados[i][4]}</td>
+          <td>${dados[i][5]}</td>
+          <td>${dados[i][6] || ""}</td>
+          <td>
+            ${dados[i][5] !== "OK"
+              ? `<button onclick="ok(${i+1})">OK</button>`
+              : "✔"}
+          </td>
+        </tr>`;
+    }
+
+    document.getElementById("total").innerText = total;
+    document.getElementById("tabela").innerHTML = html;
+  }).listarControle();
+}
+
+function ok(linha) {
+  const nome = document.getElementById("nome").value;
+  if (!nome) return alert("Informe seu nome");
+  google.script.run.marcarOK(linha, nome);
+  setTimeout(listar, 500);
 }
 
 function limpar() {
-  codProd.value = "";
-  nomeProd.value = "";
-  codCli.value = "";
-  nomeCli.value = "";
-  qtd.value = "";
+  if (confirm("Limpar o dia inteiro?")) {
+    google.script.run.limparDia();
+    setTimeout(listar, 500);
+  }
 }
 
-function carregar() {
-  fetch(API_URL + "?action=listar")
-    .then(r => r.json())
-    .then(dados => {
-      lista.innerHTML = "";
-      dados.forEach((l, i) => {
-        const status = l[0];
-        const texto = `
-          <div class="item">
-            <span class="${status === '✅' ? 'status-ok' : 'status-pendente'}">
-              ${status}
-            </span>
-            ${l[2]} → ${l[4]} → ${l[5]}
-            ${status !== '✅'
-              ? `<br><button class="ok" onclick="marcarOK(${i})">OK</button>`
-              : `<br><small>Confirmado por ${l[6]}</small>`
-            }
-          </div>`;
-        lista.innerHTML += texto;
-      });
-    });
-}
-
-function marcarOK(linha) {
-  fetch(API_URL + "?action=marcarOK", {
-    method: "POST",
-    body: JSON.stringify({
-      linha: linha,
-      usuario: usuario.value
-    })
-  }).then(() => carregar());
-}
-
-setInterval(carregar, 5000);
-carregar();
+listar();
 </script>
-
-</body>
-</html>
 
