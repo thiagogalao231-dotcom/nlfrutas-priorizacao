@@ -42,4 +42,114 @@ button {
   color: orange;
   font-weight: bold;
 }
-.item
+.item {
+  border-bottom: 1px solid #ddd;
+  padding: 6px 0;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📦 NL Frutas – Priorização</h1>
+
+<div class="box">
+  <label>Usuário</label>
+  <select id="usuario">
+    <option value="Amanda">Amanda</option>
+    <option value="João">João</option>
+  </select>
+
+  <label>Código do Produto</label>
+  <input id="codProd">
+
+  <label>Nome do Produto</label>
+  <input id="nomeProd">
+
+  <label>Código da Loja</label>
+  <input id="codCli">
+
+  <label>Nome da Loja</label>
+  <input id="nomeCli">
+
+  <label>Quantidade</label>
+  <input type="number" id="qtd">
+
+  <button onclick="adicionar()">Adicionar</button>
+</div>
+
+<div class="box">
+  <h3>📋 Pendências</h3>
+  <div id="lista"></div>
+</div>
+
+<script>
+const API_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+
+function adicionar() {
+  const dados = {
+    usuario: usuario.value,
+    codProd: codProd.value,
+    nomeProd: nomeProd.value,
+    codCli: codCli.value,
+    nomeCli: nomeCli.value,
+    qtd: qtd.value
+  };
+
+  fetch(API_URL + "?action=adicionar", {
+    method: "POST",
+    body: JSON.stringify(dados)
+  }).then(() => {
+    limpar();
+    carregar();
+  });
+}
+
+function limpar() {
+  codProd.value = "";
+  nomeProd.value = "";
+  codCli.value = "";
+  nomeCli.value = "";
+  qtd.value = "";
+}
+
+function carregar() {
+  fetch(API_URL + "?action=listar")
+    .then(r => r.json())
+    .then(dados => {
+      lista.innerHTML = "";
+      dados.forEach((l, i) => {
+        const status = l[0];
+        const texto = `
+          <div class="item">
+            <span class="${status === '✅' ? 'status-ok' : 'status-pendente'}">
+              ${status}
+            </span>
+            ${l[2]} → ${l[4]} → ${l[5]}
+            ${status !== '✅'
+              ? `<br><button class="ok" onclick="marcarOK(${i})">OK</button>`
+              : `<br><small>Confirmado por ${l[6]}</small>`
+            }
+          </div>`;
+        lista.innerHTML += texto;
+      });
+    });
+}
+
+function marcarOK(linha) {
+  fetch(API_URL + "?action=marcarOK", {
+    method: "POST",
+    body: JSON.stringify({
+      linha: linha,
+      usuario: usuario.value
+    })
+  }).then(() => carregar());
+}
+
+setInterval(carregar, 5000);
+carregar();
+</script>
+
+</body>
+</html>
+
