@@ -152,4 +152,10 @@ carregar();
 
 </body>
 </html>
+function buscarBaseDados() {
+  const sheet = SpreadsheetApp.getActive()
+    .getSheetByName("BASE_DADOS");
+
+  return sheet.getDataRange().getValues();
+}
 
