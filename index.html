@@ -30,6 +30,9 @@
       border: none;
       border-radius: 6px;
     }
+    .danger {
+      background: #c62828;
+    }
     .lista {
       font-size: 15px;
     }
@@ -48,18 +51,17 @@
 <div class="box">
   <label>Código do Produto</label>
   <input id="codProd" placeholder="Ex: 1020">
-
   <div id="nomeProduto"></div>
 
   <label>Código da Loja</label>
   <input id="codCli" placeholder="Ex: 3001">
-
   <div id="nomeCliente"></div>
 
   <label>Quantidade que falta</label>
   <input id="quantidade" type="number">
 
   <button onclick="adicionar()">Adicionar</button>
+  <button class="danger" onclick="limparTurno()">Encerrar turno (Limpar)</button>
 </div>
 
 <div class="box">
@@ -72,65 +74,6 @@
   <div id="totais"></div>
 </div>
 
-<script>
-  // BASE DE DADOS (você vai alimentar depois)
-  const produtos = {
-    "1020": "Banana Prata",
-    "1030": "Melancia",
-    "1040": "Laranja"
-  };
-
-  const clientes = {
-    "3001": "Loja Centro",
-    "3002": "Loja Bairro",
-    "3003": "Loja Atacadão"
-  };
-
-  let registros = [];
-
-  document.getElementById("codProd").addEventListener("input", function () {
-    document.getElementById("nomeProduto").innerText =
-      produtos[this.value] ? "Produto: " + produtos[this.value] : "";
-  });
-
-  document.getElementById("codCli").addEventListener("input", function () {
-    document.getElementById("nomeCliente").innerText =
-      clientes[this.value] ? "Loja: " + clientes[this.value] : "";
-  });
-
-  function adicionar() {
-    const codProd = document.getElementById("codProd").value;
-    const codCli = document.getElementById("codCli").value;
-    const qtd = Number(document.getElementById("quantidade").value);
-
-    if (!produtos[codProd] || !clientes[codCli] || qtd <= 0) {
-      alert("Preencha corretamente");
-      return;
-    }
-
-    registros.push({ codProd, codCli, qtd });
-    atualizarTela();
-  }
-
-  function atualizarTela() {
-    let lista = "";
-    let totais = {};
-
-    registros.forEach(r => {
-      lista += `${produtos[r.codProd]} → ${clientes[r.codCli]} : ${r.qtd}<br>`;
-      totais[r.codProd] = (totais[r.codProd] || 0) + r.qtd;
-    });
-
-    document.getElementById("lista").innerHTML = lista;
-
-    let resumo = "";
-    for (let p in totais) {
-      resumo += `<div class="total">${produtos[p]}: ${totais[p]}</div>`;
-    }
-
-    document.getElementById("totais").innerHTML = resumo;
-  }
-</script>
 <script>
   const produtos = {
     "1020": "Banana Prata",
@@ -204,10 +147,6 @@
 
   atualizarTela();
 </script>
-  <button onclick="limparTurno()" style="background:#c62828;margin-top:10px;">
-  Encerrar turno (Limpar)
-</button>
-
 
 </body>
 </html>
