@@ -1,152 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>NL Frutas – Priorização</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 15px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .box {
-      background: #fff;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      font-size: 16px;
-    }
-    button {
-      background: #2e7d32;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-    }
-    .danger {
-      background: #c62828;
-    }
-    .lista {
-      font-size: 15px;
-    }
-    .total {
-      background: #e8f5e9;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<title>NL Frutas – Priorização</title>
 
-<h1>📦 NL Frutas – Priorização</h1>
-
-<div class="box">
-  <label>Código do Produto</label>
-  <input id="codProd" placeholder="Ex: 1020">
-  <div id="nomeProduto"></div>
-
-  <label>Código da Loja</label>
-  <input id="codCli" placeholder="Ex: 3001">
-  <div id="nomeCliente"></div>
-
-  <label>Quantidade que falta</label>
-  <input id="quantidade" type="number">
-
-  <button onclick="adicionar()">Adicionar</button>
-  <button class="danger" onclick="limparTurno()">Encerrar turno (Limpar)</button>
-</div>
-
-<div class="box">
-  <h3>📋 Lançamentos</h3>
-  <div id="lista" class="lista"></div>
-</div>
-
-<div class="box">
-  <h3>📊 Total por Produto</h3>
-  <div id="totais"></div>
-</div>
-
-<script>
-  const produtos = {
-    "1020": "Banana Prata",
-    "1030": "Melancia",
-    "1040": "Laranja"
-  };
-
-  const clientes = {
-    "3001": "Loja Centro",
-    "3002": "Loja Bairro",
-    "3003": "Loja Atacadão"
-  };
-
-  let registros = JSON.parse(localStorage.getItem("registrosNL")) || [];
-
-  function salvar() {
-    localStorage.setItem("registrosNL", JSON.stringify(registros));
-  }
-
-  document.getElementById("codProd").addEventListener("input", function () {
-    document.getElementById("nomeProduto").innerText =
-      produtos[this.value] ? "Produto: " + produtos[this.value] : "";
-  });
-
-  document.getElementById("codCli").addEventListener("input", function () {
-    document.getElementById("nomeCliente").innerText =
-      clientes[this.value] ? "Loja: " + clientes[this.value] : "";
-  });
-
-  function adicionar() {
-    const codProd = document.getElementById("codProd").value;
-    const codCli = document.getElementById("codCli").value;
-    const qtd = Number(document.getElementById("quantidade").value);
-
-    if (!produtos[codProd] || !clientes[codCli] || qtd <= 0) {
-      alert("Preencha corretamente");
-      return;
-    }
-
-    registros.push({ codProd, codCli, qtd });
-    salvar();
-    atualizarTela();
-  }
-
-  function atualizarTela() {
-    let lista = "";
-    let totais = {};
-
-    registros.forEach(r => {
-      lista += `${produtos[r.codProd]} → ${clientes[r.codCli]} : ${r.qtd}<br>`;
-      totais[r.codProd] = (totais[r.codProd] || 0) + r.qtd;
-    });
-
-    document.getElementById("lista").innerHTML = lista;
-
-    let resumo = "";
-    for (let p in totais) {
-      resumo += `<div class="total">${produtos[p]}: ${totais[p]}</div>`;
-    }
-
-    document.getElementById("totais").innerHTML = resumo;
-  }
-
-  function limparTurno() {
-    if (confirm("Encerrar turno e apagar tudo?")) {
-      registros = [];
-      salvar();
-      atualizarTela();
-    }
-  }
-
-  atualizarTela();
-</script>
-
-</body>
-</html>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  padding: 10px;
+}
+h1 {
+  text-align: center;
+}
+.box {
+  background: #fff;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
+input, button, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  font-size: 16px;
+}
+button {
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+.ok {
+  background: #1976d2;
+}
+.status-ok {
+  color: green;
+  font-weight: bold;
+}
+.status-pendente {
+  color: orange;
+  font-weight: bold;
+}
+.item
