@@ -3,9 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <title>NL Frutas – Priorização</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 15px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .box {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #2e7d32;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+    }
+    .lista {
+      font-size: 15px;
+    }
+    .total {
+      background: #e8f5e9;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>NL Frutas – Priorização de Cargas</h1>
-  <p>Site funcionando corretamente ✅</p>
+
+<h1>📦 NL Frutas – Priorização</h1>
+
+<div class="box">
+  <label>Código do Produto</label>
+  <input id="codProd" placeholder="Ex: 1020">
+
+  <div id="nomeProduto"></div>
+
+  <label>Código da Loja</label>
+  <input id="codCli" placeholder="Ex: 3001">
+
+  <div id="nomeCliente"></div>
+
+  <label>Quantidade que falta</label>
+  <input id="quantidade" type="number">
+
+  <button onclick="adicionar()">Adicionar</button>
+</div>
+
+<div class="box">
+  <h3>📋 Lançamentos</h3>
+  <div id="lista" class="lista"></div>
+</div>
+
+<div class="box">
+  <h3>📊 Total por Produto</h3>
+  <div id="totais"></div>
+</div>
+
+<script>
+  // BASE DE DADOS (você vai alimentar depois)
+  const produtos = {
+    "1020": "Banana Prata",
+    "1030": "Melancia",
+    "1040": "Laranja"
+  };
+
+  const clientes = {
+    "3001": "Loja Centro",
+    "3002": "Loja Bairro",
+    "3003": "Loja Atacadão"
+  };
+
+  let registros = [];
+
+  document.getElementById("codProd").addEventListener("input", function () {
+    document.getElementById("nomeProduto").innerText =
+      produtos[this.value] ? "Produto: " + produtos[this.value] : "";
+  });
+
+  document.getElementById("codCli").addEventListener("input", function () {
+    document.getElementById("nomeCliente").innerText =
+      clientes[this.value] ? "Loja: " + clientes[this.value] : "";
+  });
+
+  function adicionar() {
+    const codProd = document.getElementById("codProd").value;
+    const codCli = document.getElementById("codCli").value;
+    const qtd = Number(document.getElementById("quantidade").value);
+
+    if (!produtos[codProd] || !clientes[codCli] || qtd <= 0) {
+      alert("Preencha corretamente");
+      return;
+    }
+
+    registros.push({ codProd, codCli, qtd });
+    atualizarTela();
+  }
+
+  function atualizarTela() {
+    let lista = "";
+    let totais = {};
+
+    registros.forEach(r => {
+      lista += `${produtos[r.codProd]} → ${clientes[r.codCli]} : ${r.qtd}<br>`;
+      totais[r.codProd] = (totais[r.codProd] || 0) + r.qtd;
+    });
+
+    document.getElementById("lista").innerHTML = lista;
+
+    let resumo = "";
+    for (let p in totais) {
+      resumo += `<div class="total">${produtos[p]}: ${totais[p]}</div>`;
+    }
+
+    document.getElementById("totais").innerHTML = resumo;
+  }
+</script>
+
 </body>
 </html>
