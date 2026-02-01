@@ -129,6 +129,30 @@
 
   carregarPendentes();
 </script>
+<input id="codprod" placeholder="Código do Produto">
+<button onclick="buscar()">Buscar</button>
+
+<div id="resultado"></div>
+
+<script>
+function buscar() {
+  const cod = document.getElementById("codprod").value.trim();
+
+  google.script.run.withSuccessHandler(function (res) {
+    if (!res) {
+      alert("Produto não encontrado");
+      return;
+    }
+
+    document.getElementById("resultado").innerHTML = `
+      <b>Produto:</b> ${res.nomeProduto}<br>
+      <b>Grupo:</b> ${res.grupo}<br>
+      <b>Quantidade:</b> ${res.quantidade}<br>
+      <b>Cliente:</b> ${res.cliente} (${res.codcli})
+    `;
+  }).buscarProduto(cod);
+}
+</script>
 
 </body>
 </html>
