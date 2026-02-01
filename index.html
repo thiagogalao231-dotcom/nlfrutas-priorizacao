@@ -2,80 +2,134 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>NL Frutas</title>
+  <title>Priorização NL Frutas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { font-family: Arial; background:#f2f2f2; padding:15px }
-    input, button { padding:8px; margin:5px; width:100% }
-    table { width:100%; border-collapse: collapse; margin-top:10px }
-    th, td { border:1px solid #ccc; padding:6px; text-align:center }
-    th { background:#333; color:#fff }
-    .ok { background:#c8e6c9 }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 15px;
+    }
+    h2 {
+      text-align: center;
+      color: #2e7d32;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button.ok {
+      background: #1565c0;
+    }
+    .box {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    .lista {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .produto {
+      font-weight: bold;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>📦 NL FRUTAS – PRIORIZAÇÃO</h2>
+<h2>📦 Priorização NL Frutas</h2>
 
-<input id="codCliente" placeholder="Código da loja">
-<input id="nomeCliente" placeholder="Nome da loja">
-<input id="codProduto" placeholder="Código do produto">
-<input id="qtd" placeholder="Quantidade">
+<div class="box">
+  <input type="number" id="codProd" placeholder="Código do produto">
+  <button onclick="buscarProduto()">Buscar Produto</button>
 
-<button onclick="adicionar()">➕ Adicionar</button>
-<button onclick="carregar()">📥 Carregar Loja</button>
+  <p id="nomeProduto"></p>
 
-<table id="tabela">
-  <thead>
-    <tr>
-      <th>Produto</th>
-      <th>Qtd</th>
-      <th>Status</th>
-      <th>Ação</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <input type="number" id="codCli" placeholder="Código do cliente">
+  <input type="text" id="nomeCliente" placeholder="Nome da loja">
+  <input type="number" id="quantidade" placeholder="Quantidade que falta">
+
+  <button onclick="salvar()">Adicionar Prioridade</button>
+</div>
+
+<div class="box">
+  <h3>⏳ Pendentes</h3>
+  <div id="lista"></div>
+</div>
 
 <script>
-function adicionar() {
-  google.script.run.adicionarItem(
-    codCliente.value,
-    nomeCliente.value,
-    codProduto.value,
-    qtd.value
-  );
-  alert("Adicionado!");
-}
+  let produtoAtual = null;
 
-function carregar() {
-  google.script.run.withSuccessHandler(mostrar)
-    .carregarPorCliente(codCliente.value);
-}
+  function buscarProduto() {
+    const cod = document.getElementById('codProd').value;
+    google.script.run.withSuccessHandler(res => {
+      if (!res) {
+        alert('Produto não encontrado');
+        return;
+      }
+      produtoAtual = res;
+      document.getElementById('nomeProduto').innerHTML =
+        'Produto: <b>' + res.nomeProduto + '</b>';
+    }).buscarProduto(cod);
+  }
 
-function mostrar(dados) {
-  const tbody = document.querySelector("#tabela tbody");
-  tbody.innerHTML = "";
-  dados.forEach((r, i) => {
-    const tr = document.createElement("tr");
-    if (r[6] === "OK") tr.className = "ok";
+  function salvar() {
+    if (!produtoAtual) {
+      alert('Busque o produto primeiro');
+      return;
+    }
 
-    tr.innerHTML = `
-      <td>${r[4]}</td>
-      <td>${r[5]}</td>
-      <td>${r[6]}</td>
-      <td>
-        ${r[6] === "PENDENTE" ? `<button onclick="ok(${i+2})">OK</button>` : ""}
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+    const dados = {
+      codCli: document.getElementById('codCli').value,
+      nomeCliente: document.getElementById('nomeCliente').value,
+      codProd: produtoAtual.codProd,
+      nomeProduto: produtoAtual.nomeProduto,
+      quantidade: document.getElementById('quantidade').value
+    };
 
-function ok(linha) {
-  google.script.run.marcarOk(linha);
-  carregar();
-}
+    google.script.run.withSuccessHandler(() => {
+      alert('Prioridade salva');
+      carregarPendentes();
+    }).salvarPrioridade(dados);
+  }
+
+  function carregarPendentes() {
+    google.script.run.withSuccessHandler(res => {
+      const div = document.getElementById('lista');
+      div.innerHTML = '';
+      res.forEach((l, i) => {
+        div.innerHTML += `
+          <div class="lista">
+            <div class="produto">${l[4]}</div>
+            Loja: ${l[2]} | Qtde: ${l[5]}
+            <br>
+            <button class="ok" onclick="ok(${i + 2})">OK</button>
+          </div>
+        `;
+      });
+    }).listarPendentes();
+  }
+
+  function ok(linha) {
+    google.script.run.withSuccessHandler(() => {
+      carregarPendentes();
+    }).marcarOk(linha);
+  }
+
+  carregarPendentes();
 </script>
 
 </body>
 </html>
+
