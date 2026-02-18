@@ -1,159 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Priorização NL Frutas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mapa Inteligente – Mock</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 15px;
-    }
-    h2 {
-      text-align: center;
-      color: #2e7d32;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      font-size: 16px;
-    }
+    body { font-family: Arial, sans-serif; background:#f2f4f6; margin:0; padding:12px; }
+    .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .topbar h2{ flex:1; text-align:center; margin:0; }
+    .card { background:#fff; border-radius:12px; padding:12px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+    label { font-weight:bold; font-size:14px; margin-top:8px; display:block; }
+    input { width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:16px; margin-top:4px; }
     button {
-      background: #2e7d32;
-      color: white;
-      border: none;
-      border-radius: 4px;
+      width:100%; margin-top:12px; padding:14px; font-size:16px;
+      border:none; border-radius:10px; background:#2e7d32; color:#fff; font-weight:bold; cursor:pointer;
     }
-    button.ok {
-      background: #1565c0;
-    }
-    .box {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    .lista {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
-    }
-    .produto {
-      font-weight: bold;
-    }
+    .modo { background:#455a64; }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+
+    .produto { border-radius:14px; padding:14px; margin-bottom:10px; background:#e8f5e9; }
+    .produto.prio { background:#ffebee; border:1px solid #ef9a9a; }
+    .produto-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .produto-titulo { font-weight:bold; font-size:15px; }
+    .produto-sub { font-size:13px; margin-top:6px; color:#333; line-height:1.25; }
+
+    .badge { font-size:12px; padding:4px 8px; border-radius:8px; color:#fff; white-space:nowrap; }
+    .alta { background:#d32f2f; }
+    .media { background:#f9a825; color:#111; }
+    .baixa { background:#388e3c; }
+    .chip { display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; background:#eceff1; color:#222; margin-right:6px; margin-top:6px; }
+    .chip.prio { background:#ffcdd2; }
+    .footer { font-size:12px; color:#666; text-align:center; margin-top:10px; }
   </style>
 </head>
 
 <body>
+  <div class="topbar">
+    <div style="width:40px;"></div>
+    <h2>📦 Mapa Inteligente – Mock</h2>
+    <div style="width:40px;"></div>
+  </div>
 
-<h2>📦 Priorização NL Frutas</h2>
+  <div class="card">
+    <label>Buscar produto</label>
+    <input id="busca" placeholder="Ex: banana, batata, tomate..." oninput="render()"/>
 
-<div class="box">
-  <input type="number" id="codProd" placeholder="Código do produto">
-  <button onclick="buscarProduto()">Buscar Produto</button>
+    <div class="row" style="margin-top:10px;">
+      <button class="modo" onclick="toggleSoPrioridade()" id="btnPrioridade">⭐ Só prioridade: OFF</button>
+      <button class="modo" onclick="toggleOrdenacao()" id="btnOrdem">🔤 Ordem: A→Z</button>
+    </div>
 
-  <p id="nomeProduto"></p>
+    <div style="margin-top:10px;">
+      <span class="chip prio">🔴 Prioridade alta</span>
+      <span class="chip">🟡 Prioridade média</span>
+      <span class="chip">🟢 Prioridade baixa</span>
+    </div>
+  </div>
 
-  <input type="number" id="codCli" placeholder="Código do cliente">
-  <input type="text" id="nomeCliente" placeholder="Nome da loja">
-  <input type="number" id="quantidade" placeholder="Quantidade que falta">
-
-  <button onclick="salvar()">Adicionar Prioridade</button>
-</div>
-
-<div class="box">
-  <h3>⏳ Pendentes</h3>
   <div id="lista"></div>
-</div>
+
+  <div class="footer">Mock estático (só pra visualizar a ideia). Depois plugamos nos dados reais.</div>
 
 <script>
-  let produtoAtual = null;
+  // ✅ Exemplo de dados (simulando seu “mapa”)
+  // prioridade: "alta" | "media" | "baixa"
+  const dados = [
+    { cod: 6656, nome: "BATATA INGLESA MEDIA SC 25 KG", total: 340, prioridade:"alta", setor:"PASSAÇÃO" },
+    { cod: 2614, nome: "BANANA CATURRA VERDE CX 15 KG", total: 210, prioridade:"alta", setor:"FRUTAS" },
+    { cod: 303,  nome: "TOMATE ITALIANO EXTRA CX 19 KG", total: 190, prioridade:"alta", setor:"PASSAÇÃO" },
+    { cod: 843,  nome: "LIMAO TAITI MEDIO CX 20 KG", total: 140, prioridade:"alta", setor:"FRUTAS" },
+    { cod: 238,  nome: "BANANA PRATA MEDIA VERDE CX 15 KG", total: 95, prioridade:"media", setor:"FRUTAS" },
+    { cod: 50,   nome: "REPOLHO ROXO CX 19 KG", total: 70, prioridade:"media", setor:"PASSAÇÃO" },
+    { cod: 452,  nome: "ALFACE AMERICANA 1 UN", total: 55, prioridade:"media", setor:"FRUTAS" },
+    { cod: 1520, nome: "ABOBRINHA MENINA 400 GR 1 BD", total: 42, prioridade:"baixa", setor:"PASSAÇÃO" },
+    { cod: 102,  nome: "MORANGO 250 GR CX 4 BD", total: 24, prioridade:"baixa", setor:"FRUTAS" },
+    { cod: 2257, nome: "OVO BCO DZ EMB. 12 UN IANA 20 DZ", total: 18, prioridade:"baixa", setor:"BANDEJAS" },
+  ];
 
-  function buscarProduto() {
-    const cod = document.getElementById('codProd').value;
-    google.script.run.withSuccessHandler(res => {
-      if (!res) {
-        alert('Produto não encontrado');
-        return;
-      }
-      produtoAtual = res;
-      document.getElementById('nomeProduto').innerHTML =
-        'Produto: <b>' + res.nomeProduto + '</b>';
-    }).buscarProduto(cod);
+  let soPrioridade = false;
+  let ordemAZ = true;
+
+  function norm(txt){
+    return (txt || "")
+      .toString()
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/\s+/g," ")
+      .trim();
   }
 
-  function salvar() {
-    if (!produtoAtual) {
-      alert('Busque o produto primeiro');
+  function toggleSoPrioridade(){
+    soPrioridade = !soPrioridade;
+    document.getElementById("btnPrioridade").innerText = `⭐ Só prioridade: ${soPrioridade ? "ON" : "OFF"}`;
+    render();
+  }
+
+  function toggleOrdenacao(){
+    ordemAZ = !ordemAZ;
+    document.getElementById("btnOrdem").innerText = `🔤 Ordem: ${ordemAZ ? "A→Z" : "Z→A"}`;
+    render();
+  }
+
+  function badgeClass(p){
+    if (p === "alta") return "alta";
+    if (p === "media") return "media";
+    return "baixa";
+  }
+
+  function badgeLabel(p){
+    if (p === "alta") return "PRIORIDADE";
+    if (p === "media") return "ATENÇÃO";
+    return "NORMAL";
+  }
+
+  function render(){
+    const q = norm(document.getElementById("busca").value);
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    let items = dados.slice();
+
+    if (q){
+      items = items.filter(x => norm(x.nome).includes(q) || String(x.cod).includes(q));
+    }
+
+    if (soPrioridade){
+      items = items.filter(x => x.prioridade === "alta");
+    }
+
+    items.sort((a,b)=>{
+      const na = String(a.nome || "");
+      const nb = String(b.nome || "");
+      const cmp = na.localeCompare(nb, "pt-BR", { sensitivity:"base" });
+      return ordemAZ ? cmp : -cmp;
+    });
+
+    if (!items.length){
+      const vazio = document.createElement("div");
+      vazio.className = "card";
+      vazio.innerHTML = "Nenhum item encontrado.";
+      lista.appendChild(vazio);
       return;
     }
 
-    const dados = {
-      codCli: document.getElementById('codCli').value,
-      nomeCliente: document.getElementById('nomeCliente').value,
-      codProd: produtoAtual.codProd,
-      nomeProduto: produtoAtual.nomeProduto,
-      quantidade: document.getElementById('quantidade').value
-    };
+    items.forEach(p=>{
+      const bloco = document.createElement("div");
+      bloco.className = "produto" + (p.prioridade === "alta" ? " prio" : "");
 
-    google.script.run.withSuccessHandler(() => {
-      alert('Prioridade salva');
-      carregarPendentes();
-    }).salvarPrioridade(dados);
-  }
-
-  function carregarPendentes() {
-    google.script.run.withSuccessHandler(res => {
-      const div = document.getElementById('lista');
-      div.innerHTML = '';
-      res.forEach((l, i) => {
-        div.innerHTML += `
-          <div class="lista">
-            <div class="produto">${l[4]}</div>
-            Loja: ${l[2]} | Qtde: ${l[5]}
-            <br>
-            <button class="ok" onclick="ok(${i + 2})">OK</button>
+      bloco.innerHTML = `
+        <div class="produto-header">
+          <div>
+            <div class="produto-titulo">${p.cod} — ${p.nome}</div>
+            <div class="produto-sub">
+              📍 Setor: <b>${p.setor}</b><br/>
+              📦 Total: <b>${p.total}</b>
+            </div>
           </div>
-        `;
-      });
-    }).listarPendentes();
+          <span class="badge ${badgeClass(p.prioridade)}">${badgeLabel(p.prioridade)}</span>
+        </div>
+      `;
+
+      lista.appendChild(bloco);
+    });
   }
 
-  function ok(linha) {
-    google.script.run.withSuccessHandler(() => {
-      carregarPendentes();
-    }).marcarOk(linha);
-  }
-
-  carregarPendentes();
+  render();
 </script>
-<input id="codprod" placeholder="Código do Produto">
-<button onclick="buscar()">Buscar</button>
-
-<div id="resultado"></div>
-
-<script>
-function buscar() {
-  const cod = document.getElementById("codprod").value.trim();
-
-  google.script.run.withSuccessHandler(function (res) {
-    if (!res) {
-      alert("Produto não encontrado");
-      return;
-    }
-
-    document.getElementById("resultado").innerHTML = `
-      <b>Produto:</b> ${res.nomeProduto}<br>
-      <b>Grupo:</b> ${res.grupo}<br>
-      <b>Quantidade:</b> ${res.quantidade}<br>
-      <b>Cliente:</b> ${res.cliente} (${res.codcli})
-    `;
-  }).buscarProduto(cod);
-}
-</script>
-
 </body>
 </html>
-
